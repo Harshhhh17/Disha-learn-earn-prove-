@@ -181,3 +181,30 @@ p {
 ::-webkit-scrollbar-thumb:hover {
   background: var(--text-muted);
 }
+
+/* ==============================================================================
+   Anti-Flash & App Boot Splash Overlay (Zero Artificial Delay)
+   ============================================================================== */
+#app-boot-loader {
+  position: fixed;
+  inset: 0;
+  background: var(--bg-app);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 99999;
+  transition: opacity 0.15s ease-out, visibility 0.15s ease-out;
+}
+
+#app-boot-loader.hidden {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+@keyframes pulseGlow {
+  0% { transform: scale(0.96); opacity: 0.85; }
+  100% { transform: scale(1.04); opacity: 1; filter: drop-shadow(0 0 16px rgba(59, 130, 246, 0.6)); }
+}
+

@@ -1,0 +1,227 @@
+{
+    "root_group": {
+        "name": "",
+        "path": "",
+        "id": "d41d8cd98f00b204e9800998ecf8427e",
+        "groups": {},
+        "checks": {
+                "Tournaments loaded": {
+                    "name": "Tournaments loaded",
+                    "path": "::Tournaments loaded",
+                    "id": "ac87035cdd89e09611c5df421e94de08",
+                    "passes": 330,
+                    "fails": 3135
+                },
+                "Wallet balance loaded": {
+                    "name": "Wallet balance loaded",
+                    "path": "::Wallet balance loaded",
+                    "id": "3b22de7ea848ecf0e7851673b954f44b",
+                    "passes": 290,
+                    "fails": 3175
+                },
+                "Quiz attempt started successfully": {
+                    "passes": 633,
+                    "fails": 2832,
+                    "name": "Quiz attempt started successfully",
+                    "path": "::Quiz attempt started successfully",
+                    "id": "69cbac9f67477a6a1b87e1f3d5565f4a"
+                },
+                "Answer graded successfully": {
+                    "path": "::Answer graded successfully",
+                    "id": "dcca5667fd93dd36a63cf37656cd132a",
+                    "passes": 876,
+                    "fails": 2289,
+                    "name": "Answer graded successfully"
+                },
+                "Quiz finalized and rank computed": {
+                    "id": "9cc09fcc6ef9c32530d8dbba64a8201e",
+                    "passes": 180,
+                    "fails": 453,
+                    "name": "Quiz finalized and rank computed",
+                    "path": "::Quiz finalized and rank computed"
+                },
+                "Transactions ledger retrieved": {
+                    "fails": 438,
+                    "name": "Transactions ledger retrieved",
+                    "path": "::Transactions ledger retrieved",
+                    "id": "58f7fffb8e763734c1c6c77c1a939746",
+                    "passes": 195
+                }
+            }
+    },
+    "metrics": {
+        "http_req_failed": {
+            "passes": 12322,
+            "fails": 2504,
+            "thresholds": {
+                "rate<0.01": true
+            },
+            "value": 0.8311075138270606
+        },
+        "data_sent": {
+            "rate": 44366.286250012825,
+            "count": 985968
+        },
+        "http_reqs": {
+            "count": 14826,
+            "rate": 667.1358096233247
+        },
+        "vus_max": {
+            "value": 500,
+            "min": 500,
+            "max": 500
+        },
+        "http_req_receiving": {
+            "med": 0,
+            "max": 37.725,
+            "p(90)": 0,
+            "p(95)": 0.5096,
+            "avg": 0.10650317010656958,
+            "min": 0
+        },
+        "http_req_duration{type:quiz_answer}": {
+            "p(95)": 51.602799999999945,
+            "avg": 9.420991184834122,
+            "min": 0,
+            "med": 0,
+            "max": 324.1327,
+            "p(90)": 32.87869999999999,
+            "thresholds": {
+                "p(95)<350": false
+            }
+        },
+        "custom_error_rate": {
+            "passes": 3285,
+            "fails": 0,
+            "value": 1
+        },
+        "iteration_duration": {
+            "avg": 2440.399080692644,
+            "min": 1305.7135,
+            "med": 1669.093,
+            "max": 7727.7214,
+            "p(90)": 6054.16606,
+            "p(95)": 6491.47188
+        },
+        "http_req_duration": {
+            "avg": 7.023654451639019,
+            "min": 0,
+            "med": 0,
+            "max": 331.0339,
+            "p(90)": 26.81895,
+            "p(95)": 46.249425,
+            "thresholds": {
+                "p(95)<500": false,
+                "p(99)<1000": false
+            }
+        },
+        "iterations": {
+            "count": 3465,
+            "rate": 155.91700933123028
+        },
+        "http_req_waiting": {
+            "min": 0,
+            "med": 0,
+            "max": 326.5291,
+            "p(90)": 26.3853,
+            "p(95)": 45.548525,
+            "avg": 6.850871489275609
+        },
+        "vus": {
+            "value": 5,
+            "min": 5,
+            "max": 500
+        },
+        "http_req_blocked": {
+            "avg": 0.6621509442870653,
+            "min": 0,
+            "med": 0,
+            "max": 151.1411,
+            "p(90)": 0.5636,
+            "p(95)": 1.518
+        },
+        "answer_submit_duration": {
+            "avg": 13.78483412322275,
+            "min": 0,
+            "med": 2,
+            "max": 324,
+            "p(90)": 40.59999999999991,
+            "p(95)": 64
+        },
+        "data_received": {
+            "count": 47505719,
+            "rate": 2137647.801618991
+        },
+        "http_req_connecting": {
+            "p(90)": 0.5238499999999999,
+            "p(95)": 1.505,
+            "avg": 0.6471104411169583,
+            "min": 0,
+            "med": 0,
+            "max": 151.1411
+        },
+        "http_req_sending": {
+            "p(95)": 0,
+            "avg": 0.06627979225684606,
+            "min": 0,
+            "med": 0,
+            "max": 59.8447,
+            "p(90)": 0
+        },
+        "quiz_lifecycle_duration": {
+            "min": 3510,
+            "med": 4824.5,
+            "max": 6025,
+            "p(90)": 5421.3,
+            "p(95)": 5604.849999999999,
+            "avg": 4815.066666666667
+        },
+        "http_req_duration{expected_response:true}": {
+            "med": 32.96395,
+            "max": 331.0339,
+            "p(90)": 77.04906000000014,
+            "p(95)": 118.66126999999987,
+            "avg": 41.58654189297128,
+            "min": 0.7346
+        },
+        "successful_quizzes_completed": {
+            "count": 180,
+            "rate": 8.09958490032365
+        },
+        "http_req_tls_handshaking": {
+            "avg": 0,
+            "min": 0,
+            "med": 0,
+            "max": 0,
+            "p(90)": 0,
+            "p(95)": 0
+        },
+        "checks": {
+            "passes": 2504,
+            "fails": 12322,
+            "value": 0.16889248617293942
+        },
+        "wallet_query_duration": {
+            "avg": 27.49004329004329,
+            "min": 0,
+            "med": 1,
+            "max": 287,
+            "p(90)": 141.5999999999999,
+            "p(95)": 161
+        },
+        "http_req_duration{type:wallet_query}": {
+            "p(95)": 35.30543999999996,
+            "avg": 4.064323290043291,
+            "min": 0,
+            "med": 0,
+            "max": 274.3661,
+            "p(90)": 0,
+            "thresholds": {
+                "p(95)<250": false
+            }
+        }
+    },
+    "setup_data": {
+        "token": "usr_b0401f38:USER:1788778172:f0e2bfedcbe5290491b05a472c5079439c55f1751c264b5ebccdf7fcfb9aba87"
+    }
+}

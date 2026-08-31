@@ -1,0 +1,70 @@
+name: disha-platform
+region: blr
+
+services:
+- name: disha-api
+  source_dir: backend
+  dockerfile_path: Dockerfile
+  http_port: 4000
+  instance_count: 2
+  instance_size_slug: professional-xs
+  autoscaling:
+    min_instance_count: 2
+    max_instance_count: 6
+    metrics:
+      cpu:
+        percent: 70
+  health_check:
+    http_path: /health
+    initial_delay_seconds: 15
+    period_seconds: 15
+    timeout_seconds: 5
+    failure_threshold: 3
+    success_threshold: 1
+  routes:
+  - path: /
+  envs:
+  - key: NODE_ENV
+    value: production
+    scope: RUN_AND_BUILD_TIME
+  - key: PORT
+    value: "4000"
+    scope: RUN_TIME
+  - key: FRONTEND_URL
+    value: https://disha-learn-earn-prove.netlify.app
+    scope: RUN_TIME
+  - key: DATABASE_URL
+    value: ${disha-postgres.DATABASE_URL}
+    scope: RUN_TIME
+  - key: JWT_SECRET
+    type: SECRET
+    scope: RUN_TIME
+  - key: ADMIN_MASTER_PASSCODE
+    type: SECRET
+    scope: RUN_TIME
+  - key: ADMIN_PASSWORD_HASH
+    type: SECRET
+    scope: RUN_TIME
+  - key: RAZORPAY_KEY_ID
+    type: SECRET
+    scope: RUN_TIME
+  - key: RAZORPAY_KEY_SECRET
+    type: SECRET
+    scope: RUN_TIME
+  - key: RAZORPAY_WEBHOOK_SECRET
+    type: SECRET
+    scope: RUN_TIME
+  - key: PAYMENT_MODE
+    value: live
+    scope: RUN_TIME
+  - key: SUPPORT_EMAIL
+    value: supportatdisha@gmail.com
+    scope: RUN_TIME
+
+databases:
+- name: disha-postgres
+  engine: PG
+  version: "16"
+  production: true
+  size: db-s-2vcpu-4gb
+  num_nodes: 2

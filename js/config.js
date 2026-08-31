@@ -24,7 +24,7 @@ export const Config = {
   OTP_VALIDITY_SECONDS: 300,
 
   // Support Email
-  SUPPORT_EMAIL: 'support@disha.gov.in',
+  SUPPORT_EMAIL: 'supportatdisha@gmail.com',
 
   sanitize(obj) {
     if (!obj || typeof obj !== 'object') return obj;

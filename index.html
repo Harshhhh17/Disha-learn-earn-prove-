@@ -2,21 +2,24 @@
 <html lang="hi" data-theme="dark" dir="ltr">
 <head>
   <meta charset="UTF-8" />
+  <!-- Instant Pre-Hydration Theme & Anti-FOUC Execution (Executes synchronously before DOM / CSS Paint) -->
   <script>
     (function() {
       try {
         var saved = localStorage.getItem('disha_theme_pref');
-        if (!saved) {
+        if (!saved || (saved !== 'light' && saved !== 'dark' && saved !== 'system')) {
           saved = 'dark';
           localStorage.setItem('disha_theme_pref', 'dark');
         }
         var effective = saved;
         if (saved === 'system') {
-          effective = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+          effective = (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light';
         }
         document.documentElement.setAttribute('data-theme', effective);
+        document.documentElement.className = effective;
       } catch(e) {
         document.documentElement.setAttribute('data-theme', 'dark');
+        document.documentElement.className = 'dark';
       }
     })();
   </script>
@@ -33,12 +36,19 @@
   <meta name="theme-color" content="#3b82f6" />
   
   <!-- CSS Design System with Cache-Busting -->
-  <link rel="stylesheet" href="css/variables.css?v=2.5" />
-  <link rel="stylesheet" href="css/base.css?v=2.5" />
-  <link rel="stylesheet" href="css/components.css?v=2.5" />
-  <link rel="stylesheet" href="css/animations.css?v=2.5" />
+  <link rel="stylesheet" href="css/variables.css?v=2.6" />
+  <link rel="stylesheet" href="css/base.css?v=2.6" />
+  <link rel="stylesheet" href="css/components.css?v=2.6" />
+  <link rel="stylesheet" href="css/animations.css?v=2.6" />
 </head>
 <body>
+
+  <!-- Minimal App Boot Splash (Zero Artificial Delay - Prevents Intermediate Unhydrated Paint) -->
+  <div id="app-boot-loader">
+    <div style="width: 58px; height: 58px; border-radius: var(--radius-lg, 16px); background: linear-gradient(135deg, #3b82f6, #f59e0b); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 2rem; font-weight: 800; box-shadow: 0 10px 25px rgba(59, 130, 246, 0.4); animation: pulseGlow 1.5s infinite alternate ease-in-out;">
+      D
+    </div>
+  </div>
 
   <!-- Ambient Liquid Glass Backdrop Orbs -->
   <div class="bg-glow-orb-1"></div>
@@ -122,6 +132,10 @@
           </div>
         </div>
 
+        <!-- Theme Toggle Button -->
+        <button id="theme-toggle-btn" class="btn btn-icon btn-neo" title="Toggle Theme" aria-label="Toggle Theme" style="font-size: 1.15rem;">
+          <span>🌙</span>
+        </button>
 
         <!-- Notification Bell -->
         <button id="header-notif-btn" class="btn btn-icon btn-neo" title="Notifications">
@@ -143,7 +157,7 @@
 
     <!-- Main Content View Area -->
     <main class="app-container">
-      <div id="view-landing" style="display: block;"></div>
+      <div id="view-landing" style="display: none;"></div>
       <div id="view-home" style="display: none;"></div>
       <div id="view-practice" style="display: none;"></div>
       <div id="view-live-quiz" style="display: none;"></div>
@@ -154,7 +168,7 @@
       <!-- App Global Footer -->
       <footer class="app-footer" style="padding: var(--space-xl) var(--space-md); text-align: center; border-top: 1px solid var(--border-subtle); margin-top: var(--space-xxl); font-size: 0.82rem; color: var(--text-secondary);">
         <div style="margin-bottom: 6px; color: var(--text-muted); font-size: 0.78rem;">
-          Grievance Officer & Support: <a href="mailto:support@disha.gov.in" style="color: var(--brand-primary); font-weight: 700;">support@disha.gov.in</a>
+          Grievance Officer & Support: <a href="mailto:supportatdisha@gmail.com" style="color: var(--brand-primary); font-weight: 700;">supportatdisha@gmail.com</a>
         </div>
         <div style="font-size: 0.72rem; color: var(--text-muted);">
           © 2026 Disha Competitive Assessment & Skill Quizzing Platform. All rights reserved. • 100% Legal Skill Gaming under Indian Law.

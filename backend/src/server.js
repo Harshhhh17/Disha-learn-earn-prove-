@@ -22,6 +22,10 @@ const app = express();
 const PORT = process.env.PORT || 4000;
 const isProduction = process.env.NODE_ENV === 'production';
 
+// Enable Reverse Proxy Trust (DigitalOcean App Platform Ingress / Staging Gateway)
+// Trusts 1 upstream proxy hop, correctly identifying unique client IPs without allowing IP spoofing
+app.set('trust proxy', 1);
+
 // 1. Security Headers
 app.use(helmet({
   contentSecurityPolicy: false, // Managed at Nginx/CDN edge
@@ -104,12 +108,36 @@ app.use((err, req, res, next) => {
   });
 });
 
-// 8. Start Server
+import { db } from './config/db.js';
+
+// 8. Start Server & Graceful Shutdown
 if (process.env.NODE_ENV !== 'test') {
-  app.listen(PORT, '0.0.0.0', () => {
+  const server = app.listen(PORT, '0.0.0.0', () => {
     console.log(`[Disha Production API] Server running on http://0.0.0.0:${PORT}`);
     console.log(`[Disha Production API] Environment: ${process.env.NODE_ENV || 'development'}`);
   });
+
+  const shutdown = async (signal) => {
+    console.log(`[Disha API] Received ${signal}. Starting graceful shutdown...`);
+    server.close(async () => {
+      console.log('[Disha API] HTTP server closed.');
+      try {
+        await db.close();
+        console.log('[Disha API] Database pool closed cleanly.');
+      } catch (err) {
+        console.error('[Disha API] Error closing DB pool:', err.message);
+      }
+      process.exit(0);
+    });
+
+    setTimeout(() => {
+      console.error('[Disha API] Forced shutdown after timeout.');
+      process.exit(1);
+    }, 10000);
+  };
+
+  process.on('SIGTERM', () => shutdown('SIGTERM'));
+  process.on('SIGINT', () => shutdown('SIGINT'));
 }
 
 export default app;

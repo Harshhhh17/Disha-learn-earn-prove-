@@ -38,17 +38,27 @@ class Application {
         } catch (e) {}
       }
 
-      // 4. Initial Route Resolution: Login page first for unauthenticated users
+      // 4. Initial Route Resolution: Synchronous determination from session
       const startRoute = Auth.isLoggedIn() ? 'home' : 'landing';
       this.navigateTo(startRoute);
 
-      // 4. Listen for language changes
+      // 5. Dismiss Boot Loader smoothly
+      const bootLoader = document.getElementById('app-boot-loader');
+      if (bootLoader) {
+        bootLoader.classList.add('hidden');
+        setTimeout(() => {
+          try { bootLoader.remove(); } catch (e) {}
+        }, 150);
+      }
+
+      // 6. Listen for language changes
       window.addEventListener('disha:languageChanged', () => {
         this.renderAll();
       });
     } catch (err) {
       console.error('[Disha App Init Error]:', err);
       this.navigateTo('landing');
+      document.getElementById('app-boot-loader')?.classList.add('hidden');
     }
   }
 

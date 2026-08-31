@@ -27,7 +27,6 @@ router.post('/create-order', AuthMiddleware.authenticate, async (req, res) => {
     const userId = req.user.id;
     const { amountRupees, purpose = 'WALLET_DEPOSIT', referenceId = null } = req.body;
 
-    const purpose = req.body.purpose || 'WALLET_DEPOSIT';
     const amt = parseFloat(amountRupees);
     if (purpose === 'DONATION') {
       if (isNaN(amt) || !isFinite(amt) || amt < 10 || amt > 100000) {

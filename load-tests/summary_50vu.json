@@ -1,0 +1,227 @@
+{
+    "root_group": {
+        "path": "",
+        "id": "d41d8cd98f00b204e9800998ecf8427e",
+        "groups": {},
+        "checks": {
+                "Tournaments loaded": {
+                    "path": "::Tournaments loaded",
+                    "id": "ac87035cdd89e09611c5df421e94de08",
+                    "passes": 108,
+                    "fails": 46,
+                    "name": "Tournaments loaded"
+                },
+                "Wallet balance loaded": {
+                    "name": "Wallet balance loaded",
+                    "path": "::Wallet balance loaded",
+                    "id": "3b22de7ea848ecf0e7851673b954f44b",
+                    "passes": 105,
+                    "fails": 49
+                },
+                "Quiz attempt started successfully": {
+                    "name": "Quiz attempt started successfully",
+                    "path": "::Quiz attempt started successfully",
+                    "id": "69cbac9f67477a6a1b87e1f3d5565f4a",
+                    "passes": 150,
+                    "fails": 4
+                },
+                "Answer graded successfully": {
+                    "name": "Answer graded successfully",
+                    "path": "::Answer graded successfully",
+                    "id": "dcca5667fd93dd36a63cf37656cd132a",
+                    "passes": 720,
+                    "fails": 30
+                },
+                "Quiz finalized and rank computed": {
+                    "id": "9cc09fcc6ef9c32530d8dbba64a8201e",
+                    "passes": 140,
+                    "fails": 10,
+                    "name": "Quiz finalized and rank computed",
+                    "path": "::Quiz finalized and rank computed"
+                },
+                "Transactions ledger retrieved": {
+                    "path": "::Transactions ledger retrieved",
+                    "id": "58f7fffb8e763734c1c6c77c1a939746",
+                    "passes": 141,
+                    "fails": 9,
+                    "name": "Transactions ledger retrieved"
+                }
+            },
+        "name": ""
+    },
+    "metrics": {
+        "http_req_duration": {
+            "max": 171.9926,
+            "p(90)": 27.99049000000002,
+            "p(95)": 41.433465000000034,
+            "avg": 10.48168895502647,
+            "min": 0,
+            "med": 4.3528,
+            "thresholds": {
+                "p(99)<1000": false,
+                "p(95)<500": false
+            }
+        },
+        "http_req_failed": {
+            "passes": 148,
+            "fails": 1364,
+            "thresholds": {
+                "rate<0.01": true
+            },
+            "value": 0.09788359788359788
+        },
+        "data_received": {
+            "count": 27027798,
+            "rate": 1336646.5680561494
+        },
+        "http_req_waiting": {
+            "avg": 10.186412235449744,
+            "min": 0,
+            "med": 3.9852499999999997,
+            "max": 171.4823,
+            "p(90)": 27.086990000000007,
+            "p(95)": 41.31642000000002
+        },
+        "http_req_duration{expected_response:true}": {
+            "p(95)": 43.71360499999997,
+            "avg": 11.61899831378301,
+            "min": 0.5058,
+            "med": 5.46585,
+            "max": 171.9926,
+            "p(90)": 31.114670000000014
+        },
+        "http_reqs": {
+            "count": 1512,
+            "rate": 74.77522256533433
+        },
+        "http_req_sending": {
+            "min": 0,
+            "med": 0,
+            "max": 11.2444,
+            "p(90)": 0,
+            "p(95)": 0.509045,
+            "avg": 0.06206117724867729
+        },
+        "http_req_duration{type:wallet_query}": {
+            "min": 0,
+            "med": 2.24115,
+            "max": 91.1117,
+            "p(90)": 18.795480000000026,
+            "p(95)": 33.12426499999998,
+            "avg": 7.674149350649355,
+            "thresholds": {
+                "p(95)<250": false
+            }
+        },
+        "data_sent": {
+            "count": 554823,
+            "rate": 27438.500865983126
+        },
+        "http_req_receiving": {
+            "p(90)": 0.99322,
+            "p(95)": 1.011845,
+            "avg": 0.23321554232804242,
+            "min": 0,
+            "med": 0,
+            "max": 13.1384
+        },
+        "answer_submit_duration": {
+            "p(95)": 43.549999999999955,
+            "avg": 11.476,
+            "min": 0,
+            "med": 4,
+            "max": 172,
+            "p(90)": 29
+        },
+        "custom_error_rate": {
+            "fails": 0,
+            "passes": 14,
+            "value": 1
+        },
+        "http_req_blocked": {
+            "max": 42.1811,
+            "p(90)": 1.6330800000000032,
+            "p(95)": 3.0007349999999997,
+            "avg": 1.0604850529100542,
+            "min": 0,
+            "med": 0.5095
+        },
+        "successful_quizzes_completed": {
+            "count": 140,
+            "rate": 6.9236317190124375
+        },
+        "http_req_duration{type:quiz_answer}": {
+            "avg": 10.063655200000003,
+            "min": 0,
+            "med": 3.3587499999999997,
+            "max": 171.9926,
+            "p(90)": 24.44854,
+            "p(95)": 39.36040499999999,
+            "thresholds": {
+                "p(95)<350": false
+            }
+        },
+        "http_req_tls_handshaking": {
+            "avg": 0,
+            "min": 0,
+            "med": 0,
+            "max": 0,
+            "p(90)": 0,
+            "p(95)": 0
+        },
+        "vus": {
+            "max": 50,
+            "value": 1,
+            "min": 1
+        },
+        "quiz_lifecycle_duration": {
+            "p(95)": 5364.2,
+            "avg": 4649.7357142857145,
+            "min": 3483,
+            "med": 4697,
+            "max": 5920,
+            "p(90)": 5281.7
+        },
+        "vus_max": {
+            "value": 50,
+            "min": 50,
+            "max": 50
+        },
+        "iteration_duration": {
+            "avg": 5845.837874675326,
+            "min": 1630.6712,
+            "med": 5991.9331,
+            "max": 7449.1196,
+            "p(90)": 6703.69743,
+            "p(95)": 6813.39958
+        },
+        "checks": {
+            "passes": 1364,
+            "fails": 148,
+            "value": 0.9021164021164021
+        },
+        "wallet_query_duration": {
+            "med": 5,
+            "max": 92,
+            "p(90)": 23.200000000000102,
+            "p(95)": 33.74999999999997,
+            "avg": 9.467532467532468,
+            "min": 0
+        },
+        "http_req_connecting": {
+            "min": 0,
+            "med": 0.5086,
+            "max": 42.1811,
+            "p(90)": 1.5278,
+            "p(95)": 2.699845000000002,
+            "avg": 1.0085605820105825
+        },
+        "iterations": {
+            "count": 154,
+            "rate": 7.615994890913681
+        }
+    },
+    "setup_data": {
+        "token": "usr_b0401f38:USER:1788778172:f0e2bfedcbe5290491b05a472c5079439c55f1751c264b5ebccdf7fcfb9aba87"
+    }
+}

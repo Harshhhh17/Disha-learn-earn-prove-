@@ -29,7 +29,8 @@ router.post('/request-otp', async (req, res) => {
       });
     }
 
-    const cleanId = identifier.trim().toLowerCase();
+    const isPhone = /^[+0-9\s\-()]+$/.test(identifier.trim());
+    const cleanId = isPhone ? identifier.replace(/[\s\-()]/g, '').trim() : identifier.trim().toLowerCase();
 
     // Check rate limit: max 5 requests per 5 minutes per identifier
     const fiveMinsAgo = new Date(Date.now() - 5 * 60 * 1000);
@@ -107,7 +108,8 @@ router.post('/verify-otp', async (req, res) => {
       });
     }
 
-    const cleanId = identifier.trim().toLowerCase();
+    const isPhone = /^[+0-9\s\-()]+$/.test(identifier.trim());
+    const cleanId = isPhone ? identifier.replace(/[\s\-()]/g, '').trim() : identifier.trim().toLowerCase();
     const cleanOtp = otp.toString().trim();
 
     // Load active OTP record
@@ -163,7 +165,6 @@ router.post('/verify-otp', async (req, res) => {
     }
 
     // Find or create User
-    const isPhone = /^[+0-9\s-]+$/.test(cleanId);
     let user = null;
 
     const userCheck = await db.query(
@@ -220,6 +221,7 @@ router.post('/verify-otp', async (req, res) => {
 
     res.json({
       success: true,
+      message: 'Welcome to Disha',
       token,
       user: {
         id: user.id,

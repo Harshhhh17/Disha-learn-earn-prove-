@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="hi" data-theme="dark" dir="ltr">
+<head>
+  <meta charset="UTF-8" />
+  <script>
+    (function() {
+      try {
+        var saved = localStorage.getItem('disha_theme_pref');
+        if (!saved) {
+          saved = 'dark';
+          localStorage.setItem('disha_theme_pref', 'dark');
+        }
+        var effective = saved;
+        if (saved === 'system') {
+          effective = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        }
+        document.documentElement.setAttribute('data-theme', effective);
+      } catch(e) {
+        document.documentElement.setAttribute('data-theme', 'dark');
+      }
+    })();
+  </script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <title>Disha — Where Knowledge Meets Reward | Live MCQ Quiz Platform</title>
+  
+  <!-- Primary Meta Tags -->
+  <meta name="title" content="Disha — Where Knowledge Meets Reward | Live MCQ Quiz Platform" />
+  <meta name="description" content="Compete in live, timed government exam quizzes (SSC, UPSSSC, Railways, Bank), revise previous year questions, and win real-money prizes with instant bank withdrawals." />
+  <meta name="keywords" content="Disha, Live Quiz, Real Money Quiz, SSC CGL, UPSSSC PET, Railways NTPC, Bank PO, Government Exam Preparation, MCQ Quiz, Sarkari Naukri Prep" />
+  <meta name="theme-color" content="#3b82f6" />
+  
+  <!-- CSS Design System with Cache-Busting -->
+  <link rel="stylesheet" href="css/variables.css?v=2.5" />
+  <link rel="stylesheet" href="css/base.css?v=2.5" />
+  <link rel="stylesheet" href="css/components.css?v=2.5" />
+  <link rel="stylesheet" href="css/animations.css?v=2.5" />
+</head>
+<body>
+
+  <!-- Ambient Liquid Glass Backdrop Orbs -->
+  <div class="bg-glow-orb-1"></div>
+  <div class="bg-glow-orb-2"></div>
+
+  <!-- Global App Wrapper -->
+  <div class="app-wrapper no-bottom-nav">
+    
+    <!-- Top Sticky Header -->
+    <header class="app-header">
+      <div class="brand-badge" id="header-brand-logo">
+        <div class="brand-icon">D</div>
+        <div class="brand-name">
+          <span>Disha</span>
+          <span class="brand-tagline" data-i18n="tagline">Where Knowledge Meets Reward</span>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <!-- Language Selector Dropdown -->
+        <div style="position: relative;">
+          <button id="lang-menu-btn" class="btn btn-neo btn-sm" style="padding: 6px 12px; gap: 4px;" title="Switch Language">
+            <span>🌐</span>
+            <span id="current-lang-label" style="font-weight: 700;">हिंदी</span>
+            <span style="font-size: 0.7rem;">▼</span>
+          </button>
+
+          <div id="lang-dropdown-menu" class="dropdown-menu">
+            <div class="dropdown-item lang-dropdown-item" data-lang="hi">
+              <span class="native-name">हिंदी (Hindi)</span>
+              <span style="font-size: 0.75rem; color: var(--text-muted);">हिं</span>
+            </div>
+            <div class="dropdown-item lang-dropdown-item" data-lang="en">
+              <span class="native-name">English</span>
+              <span style="font-size: 0.75rem; color: var(--text-muted);">EN</span>
+            </div>
+            <div class="dropdown-item lang-dropdown-item" data-lang="pa">
+              <span class="native-name">ਪੰਜਾਬੀ (Punjabi)</span>
+              <span style="font-size: 0.75rem; color: var(--text-muted);">ਪੰ</span>
+            </div>
+            <div class="dropdown-item lang-dropdown-item" data-lang="ur">
+              <span class="native-name">اردو (Urdu)</span>
+              <span style="font-size: 0.75rem; color: var(--text-muted);">اردو</span>
+            </div>
+            <div class="dropdown-item lang-dropdown-item" data-lang="bho">
+              <span class="native-name">भोजपुरी (Bhojpuri)</span>
+              <span style="font-size: 0.75rem; color: var(--text-muted);">भोज</span>
+            </div>
+            <div class="dropdown-item lang-dropdown-item" data-lang="ta">
+              <span class="native-name">தமிழ் (Tamil)</span>
+              <span style="font-size: 0.75rem; color: var(--text-muted);">த</span>
+            </div>
+            <div class="dropdown-item lang-dropdown-item" data-lang="te">
+              <span class="native-name">తెలుగు (Telugu)</span>
+              <span style="font-size: 0.75rem; color: var(--text-muted);">తె</span>
+            </div>
+            <div class="dropdown-item lang-dropdown-item" data-lang="bn">
+              <span class="native-name">বাংলা (Bengali)</span>
+              <span style="font-size: 0.75rem; color: var(--text-muted);">বাং</span>
+            </div>
+            <div class="dropdown-item lang-dropdown-item" data-lang="mr">
+              <span class="native-name">मराठी (Marathi)</span>
+              <span style="font-size: 0.75rem; color: var(--text-muted);">म</span>
+            </div>
+            <div class="dropdown-item lang-dropdown-item" data-lang="gu">
+              <span class="native-name">ગુજરાતી (Gujarati)</span>
+              <span style="font-size: 0.75rem; color: var(--text-muted);">ગુ</span>
+            </div>
+            <div class="dropdown-item lang-dropdown-item" data-lang="kn">
+              <span class="native-name">ಕನ್ನಡ (Kannada)</span>
+              <span style="font-size: 0.75rem; color: var(--text-muted);">ಕ</span>
+            </div>
+            <div class="dropdown-item lang-dropdown-item" data-lang="ml">
+              <span class="native-name">മലയാളം (Malayalam)</span>
+              <span style="font-size: 0.75rem; color: var(--text-muted);">മ</span>
+            </div>
+            <div class="dropdown-item lang-dropdown-item" data-lang="or">
+              <span class="native-name">ଓଡ଼ିଆ (Odia)</span>
+              <span style="font-size: 0.75rem; color: var(--text-muted);">ଓ</span>
+            </div>
+          </div>
+        </div>
+
+
+        <!-- Notification Bell -->
+        <button id="header-notif-btn" class="btn btn-icon btn-neo" title="Notifications">
+          <span>🔔</span>
+        </button>
+
+        <!-- Log In / Sign Up CTA -->
+        <button id="header-login-btn" class="btn btn-primary btn-sm" style="padding: 6px 14px; font-size: 0.8rem; font-weight: 700; gap: 4px;" title="Sign In / Register">
+          <span>🔑</span>
+          <span>Log In</span>
+        </button>
+
+        <!-- Profile Avatar Trigger -->
+        <button id="header-user-btn" class="btn btn-icon btn-neo" title="My Profile" style="font-size: 1.15rem;">
+          <span>👨‍🎓</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Content View Area -->
+    <main class="app-container">
+      <div id="view-landing" style="display: block;"></div>
+      <div id="view-home" style="display: none;"></div>
+      <div id="view-practice" style="display: none;"></div>
+      <div id="view-live-quiz" style="display: none;"></div>
+      <div id="view-wallet" style="display: none;"></div>
+      <div id="view-profile" style="display: none;"></div>
+      <div id="view-admin" style="display: none;"></div>
+
+      <!-- App Global Footer -->
+      <footer class="app-footer" style="padding: var(--space-xl) var(--space-md); text-align: center; border-top: 1px solid var(--border-subtle); margin-top: var(--space-xxl); font-size: 0.82rem; color: var(--text-secondary);">
+        <div style="margin-bottom: 6px; color: var(--text-muted); font-size: 0.78rem;">
+          Grievance Officer & Support: <a href="mailto:support@disha.gov.in" style="color: var(--brand-primary); font-weight: 700;">support@disha.gov.in</a>
+        </div>
+        <div style="font-size: 0.72rem; color: var(--text-muted);">
+          © 2026 Disha Competitive Assessment & Skill Quizzing Platform. All rights reserved. • 100% Legal Skill Gaming under Indian Law.
+        </div>
+      </footer>
+    </main>
+
+    <!-- Bottom Navigation Bar -->
+    <nav class="bottom-nav" id="bottom-nav" style="display: none;">
+      <div class="nav-inner">
+        <!-- Home -->
+        <a class="nav-item active" data-nav="home" href="#home">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+            <polyline points="9 22 9 12 15 12 15 22"></polyline>
+          </svg>
+          <span data-i18n="home">Home</span>
+        </a>
+
+        <!-- Practice -->
+        <a class="nav-item" data-nav="practice" href="#practice">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+          </svg>
+          <span data-i18n="practice">Practice</span>
+        </a>
+
+        <!-- Live Quiz (Flagship) -->
+        <a class="nav-item nav-item-live" data-nav="live-quiz" href="#live-quiz">
+          <span class="live-nav-dot"></span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+          </svg>
+          <span data-i18n="liveQuiz" style="font-weight: 800;">Live Quiz</span>
+        </a>
+
+        <!-- Wallet -->
+        <a class="nav-item" data-nav="wallet" href="#wallet">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
+            <line x1="1" y1="10" x2="23" y2="10"></line>
+          </svg>
+          <span data-i18n="wallet">Wallet</span>
+        </a>
+
+        <!-- Profile -->
+        <a class="nav-item" data-nav="profile" href="#profile">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+            <circle cx="12" cy="7" r="4"></circle>
+          </svg>
+          <span data-i18n="profile">Profile</span>
+        </a>
+      </div>
+    </nav>
+  </div>
+
+  <!-- Global Modals System -->
+
+  <!-- 1. Authentication & Onboarding Modal -->
+  <div id="auth-modal" class="modal-overlay">
+    <div class="modal-card">
+      <!-- Step 1: Login Options -->
+      <div id="auth-step-options">
+        <div style="text-align: center; margin-bottom: var(--space-lg);">
+          <div class="brand-icon" style="width: 52px; height: 52px; margin: 0 auto 12px; font-size: 1.6rem;">D</div>
+          <h2 style="font-size: 1.4rem;" data-i18n="loginTitle">Join India’s #1 Live Govt Exam Quiz</h2>
+          <p style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 4px;">Solve PYQs, compete in 15s live tournaments, win real money.</p>
+        </div>
+
+        <!-- Mandatory T&C Checkbox Gate (PRD v1.0 Feature 3) -->
+        <div class="legal-gate-checkbox" style="margin: var(--space-md) 0; font-size: 0.82rem; color: var(--text-secondary); text-align: left; display: flex; gap: 8px; align-items: flex-start;">
+          <input type="checkbox" id="auth-terms-checkbox" style="margin-top: 3px; cursor: pointer; width: 16px; height: 16px; accent-color: var(--brand-primary);" />
+          <label for="auth-terms-checkbox" style="cursor: pointer; line-height: 1.4;">
+            I agree to the <a href="#terms" class="btn-open-terms" style="color: var(--brand-primary); font-weight: 700; text-decoration: underline;">Terms & Conditions</a> and <a href="#privacy" class="btn-open-privacy" style="color: var(--brand-primary); font-weight: 700; text-decoration: underline;">Privacy Policy</a>. (18+ years & not in restricted states).
+          </label>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: var(--space-md);">
+          <button id="btn-auth-phone" class="btn btn-primary btn-block" style="padding: 14px;" disabled>
+            📱 Continue with Phone OTP
+          </button>
+
+          <button id="btn-auth-google" class="btn btn-neo btn-block" style="padding: 14px;" disabled>
+            <svg style="width: 20px; height: 20px;" viewBox="0 0 24 24">
+              <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+              <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+              <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+              <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+            </svg>
+            Continue with Google
+          </button>
+
+          <button id="btn-auth-email" class="btn btn-neo btn-block" style="padding: 14px;" disabled>
+            ✉️ Continue with Email
+          </button>
+        </div>
+      </div>
+
+      <!-- Step 2: Phone Input -->
+      <div id="auth-step-phone" style="display: none;">
+        <h3 style="font-size: 1.3rem; margin-bottom: 6px;">Enter Mobile Number</h3>
+        <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: var(--space-lg);">We will send a 6-digit OTP for instant login.</p>
+
+        <div class="form-group">
+          <label class="form-label">Mobile Number</label>
+          <div style="display: flex; gap: 8px;">
+            <div class="neo-inset" style="padding: 12px 14px; font-weight: 700; color: var(--text-primary);">+91</div>
+            <input type="tel" id="auth-phone-input" class="input-neo" placeholder="9876543210" maxlength="10" />
+          </div>
+        </div>
+
+        <button id="btn-send-otp" class="btn btn-primary btn-block" style="margin-top: var(--space-md);">
+          Send Verification OTP →
+        </button>
+      </div>
+
+      <!-- Step 3: OTP Input -->
+      <div id="auth-step-otp" style="display: none; text-align: center;">
+        <h3 style="font-size: 1.3rem; margin-bottom: 6px;">Verify 6-Digit OTP</h3>
+        <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: var(--space-md);">
+          Enter the code sent to your mobile number.
+        </p>
+
+        <div class="otp-container">
+          <input type="text" class="otp-box" maxlength="1" />
+          <input type="text" class="otp-box" maxlength="1" />
+          <input type="text" class="otp-box" maxlength="1" />
+          <input type="text" class="otp-box" maxlength="1" />
+          <input type="text" class="otp-box" maxlength="1" />
+          <input type="text" class="otp-box" maxlength="1" />
+        </div>
+
+        <div style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: var(--space-lg);">
+          Resend code in <strong id="otp-timer-label" style="color: var(--brand-primary);">30s</strong>
+          <button id="btn-resend-otp" class="btn btn-neo btn-sm" style="margin-left: 8px;" disabled>Resend</button>
+        </div>
+
+        <button id="btn-verify-otp" class="btn btn-primary btn-block">
+          Verify & Continue →
+        </button>
+      </div>
+
+      <!-- Step 4: Email Input -->
+      <div id="auth-step-email" style="display: none;">
+        <h3 style="font-size: 1.3rem; margin-bottom: 6px;">Email Login</h3>
+        <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: var(--space-lg);">Sign in or create account with email.</p>
+
+        <div class="form-group">
+          <label class="form-label">Email Address</label>
+          <input type="email" id="auth-email-input" class="input-neo" placeholder="aspirant@example.com" />
+        </div>
+
+        <button id="btn-submit-email" class="btn btn-primary btn-block">
+          Continue with Email →
+        </button>
+      </div>
+
+      <!-- Step 5: Onboarding Questionnaire -->
+      <div id="auth-step-onboarding" style="display: none;">
+        <h3 style="font-size: 1.3rem; margin-bottom: 6px;">Complete Your Profile</h3>
+        <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: var(--space-lg);">Tailor questions to your target examinations.</p>
+
+        <div class="form-group">
+          <label class="form-label">Your Full Name</label>
+          <input type="text" id="onboarding-name" class="input-neo" placeholder="e.g. Rohan Sharma" />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Target Exams (Select all that apply)</label>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+            <button type="button" class="btn btn-neo btn-sm onboarding-exam-pill active" data-exam="SSC">🏛️ SSC CGL/CHSL</button>
+            <button type="button" class="btn btn-neo btn-sm onboarding-exam-pill active" data-exam="Railways">🚆 Railways RRB</button>
+            <button type="button" class="btn btn-neo btn-sm onboarding-exam-pill" data-exam="UPSSSC">📜 UPSSSC PET</button>
+            <button type="button" class="btn btn-neo btn-sm onboarding-exam-pill" data-exam="Bank">🏦 Banking PO</button>
+          </div>
+        </div>
+
+        <button id="btn-finish-onboarding" class="btn btn-primary btn-block" style="margin-top: var(--space-lg);">
+          🚀 Enter Disha Arena
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. KYC Verification Modal -->
+  <div id="kyc-modal" class="modal-overlay">
+    <div class="modal-card">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-md);">
+        <h3 style="font-size: 1.25rem;">🆔 1-Minute KYC Verification</h3>
+        <button id="btn-close-kyc" style="background:none; border:none; font-size:1.2rem; cursor:pointer; color:var(--text-muted);">✕</button>
+      </div>
+
+      <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: var(--space-md);">
+        Per RBI compliance guidelines for real-money prize withdrawals, verify your PAN or Aadhaar to enable direct IMPS/UPI bank payouts.
+      </p>
+
+      <div class="form-group">
+        <label class="form-label">PAN Number (Permanent Account Number)</label>
+        <input type="text" id="kyc-pan-input" class="input-neo" placeholder="ABCDE1234F" maxlength="10" style="text-transform: uppercase; font-family: var(--font-mono); font-weight: 700;" />
+        <span style="font-size: 0.72rem; color: var(--text-muted);">10-character alphanumeric PAN</span>
+      </div>
+
+      <button id="btn-submit-pan" class="btn btn-primary btn-block" style="margin-top: var(--space-md);">
+        Verify PAN & Unlock Withdrawals →
+      </button>
+    </div>
+  </div>
+
+  <!-- 3. Withdrawal Modal -->
+  <div id="withdraw-modal" class="modal-overlay">
+    <div class="modal-card">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-md);">
+        <h3 style="font-size: 1.25rem;">🏦 Bank Withdrawal</h3>
+        <button id="btn-close-withdraw" style="background:none; border:none; font-size:1.2rem; cursor:pointer; color:var(--text-muted);">✕</button>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Withdrawal Amount (₹)</label>
+        <input type="number" id="withdraw-amount-input" class="input-neo" placeholder="1000" min="100" />
+        <span style="font-size: 0.72rem; color: var(--text-muted);">Minimum: ₹100 • Zero Platform Withdrawal Fee</span>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Payout Method</label>
+        <div class="neo-inset" style="padding: 10px 14px; display: flex; align-items: center; justify-content: space-between;">
+          <div>
+            <div style="font-weight: 700; font-size: 0.9rem;">UPI Instant Transfer</div>
+            <div style="font-size: 0.75rem; color: var(--text-muted);">rohan@okhdfcbank</div>
+          </div>
+          <span style="font-size: 0.75rem; color: var(--brand-emerald); font-weight: 700;">✓ Linked</span>
+        </div>
+      </div>
+
+      <!-- TDS Breakdown -->
+      <div class="glass-panel" style="padding: 12px 16px; margin: var(--space-md) 0; font-size: 0.85rem;">
+        <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+          <span style="color: var(--text-secondary);">TDS Deducted (Section 194BA)</span>
+          <span id="withdraw-tds-val" style="font-family: var(--font-mono); font-weight: 700;">₹0.00</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; border-top: 1px solid var(--border-subtle); padding-top: 6px; font-weight: 700;">
+          <span>Net Amount to Bank</span>
+          <span id="withdraw-net-payout" style="font-family: var(--font-mono); font-size: 1.1rem; color: var(--brand-emerald);">₹0.00</span>
+        </div>
+      </div>
+
+      <button id="btn-confirm-withdraw" class="btn btn-primary btn-block">
+        🚀 Confirm & Initiate Instant IMPS Transfer
+      </button>
+    </div>
+  </div>
+
+  <!-- 4. Add Cash Modal -->
+  <div id="addcash-modal" class="modal-overlay">
+    <div class="modal-card">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-md);">
+        <h3 style="font-size: 1.25rem;">💳 Add Cash to Wallet</h3>
+        <button id="btn-close-addcash" style="background:none; border:none; font-size:1.2rem; cursor:pointer; color:var(--text-muted);">✕</button>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Amount (₹)</label>
+        <input type="number" id="addcash-amount-input" class="input-neo" value="500" min="50" step="50" />
+      </div>
+
+      <button id="btn-confirm-addcash" class="btn btn-primary btn-block">
+        Pay via UPI / Cards →
+      </button>
+    </div>
+  </div>
+
+  <!-- 5. Razorpay Sandbox Test Checkout Modal -->
+  <div id="razorpay-sandbox-modal" class="modal-overlay">
+    <div class="modal-card" style="max-width: 440px; padding: var(--space-lg); border: 2px solid var(--brand-primary); box-shadow: var(--neo-card);">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-md);">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <div style="width: 32px; height: 32px; border-radius: 8px; background: #0c2340; color: #528ff0; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 1.1rem;">R</div>
+          <div>
+            <div style="font-weight: 800; font-size: 1rem; color: var(--text-primary);">Razorpay <span style="background: hsla(38,98%,52%,0.2); color: hsl(38,98%,46%); padding: 2px 6px; border-radius: 4px; font-size: 0.68rem; font-weight: 800;">TEST MODE</span></div>
+            <div style="font-size: 0.72rem; color: var(--text-secondary);">Disha Platform Top-up</div>
+          </div>
+        </div>
+        <button id="btn-close-rzp-sandbox" style="background:none; border:none; font-size:1.2rem; cursor:pointer; color:var(--text-muted);">✕</button>
+      </div>
+
+      <div class="neo-inset" style="padding: var(--space-md); border-radius: var(--radius-md); margin-bottom: var(--space-md); text-align: center;">
+        <div style="font-size: 0.78rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">Amount Payable</div>
+        <div id="rzp-sandbox-amount" style="font-family: var(--font-mono); font-size: 1.8rem; font-weight: 800; color: var(--brand-primary); margin-top: 2px;">₹500.00</div>
+        <div id="rzp-sandbox-order-id" style="font-family: var(--font-mono); font-size: 0.7rem; color: var(--text-muted); margin-top: 2px;">order_test_123</div>
+      </div>
+
+      <div style="margin-bottom: var(--space-md);">
+        <div style="font-size: 0.8rem; font-weight: 700; color: var(--text-primary); margin-bottom: 6px;">Test Payment Methods:</div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px;">
+          <div class="neo-card-sm" style="padding: 8px; text-align: center; border: 1px solid var(--brand-primary); cursor: pointer;">
+            <div style="font-size: 1.1rem;">📱</div>
+            <div style="font-size: 0.75rem; font-weight: 700;">UPI (Instant)</div>
+          </div>
+          <div class="neo-card-sm" style="padding: 8px; text-align: center; border: 1px solid var(--border-subtle); cursor: pointer;">
+            <div style="font-size: 1.1rem;">💳</div>
+            <div style="font-size: 0.75rem; font-weight: 700;">Test Card</div>
+          </div>
+        </div>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 8px;">
+        <button id="btn-rzp-sandbox-success" class="btn btn-primary btn-block" style="padding: 12px; font-weight: 800; font-size: 0.95rem;">
+          ✓ Simulate Successful Payment (₹<span id="rzp-sandbox-btn-amt">500</span>)
+        </button>
+        <button id="btn-rzp-sandbox-failure" class="btn btn-neo btn-block" style="padding: 10px; font-size: 0.85rem; color: var(--brand-crimson);">
+          ✗ Simulate Payment Failure
+        </button>
+      </div>
+
+      <div style="font-size: 0.7rem; color: var(--text-muted); text-align: center; margin-top: 10px;">
+        🔒 Server-Side HMAC-SHA256 Signature Verification Enforced
+      </div>
+    </div>
+  </div>
+
+  <!-- Global Toast Notification Container -->
+  <div id="global-toast-container" class="toast-container"></div>
+
+  <!-- Razorpay Official Checkout SDK -->
+  <script src="https://checkout.razorpay.com/v1/checkout.js" async></script>
+
+  <!-- Main ES Module Entry Point with Cache-Busting -->
+  <script type="module" src="js/app.js?v=5.0"></script>
+</body>
+</html>

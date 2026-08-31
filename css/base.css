@@ -1,0 +1,183 @@
+/* ==========================================================================
+   Disha Base Styles, Typography, Resets & Global Layout
+   ========================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Noto+Sans+Devanagari:wght@400;500;600;700&family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,600&display=swap');
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html {
+  font-size: 16px;
+  scroll-behavior: smooth;
+  height: 100%;
+  background-color: var(--bg-app);
+}
+
+body {
+  min-height: 100vh;
+  font-family: var(--font-body);
+  background-color: var(--bg-app);
+  color: var(--text-primary);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  transition: background-color var(--transition-normal), color var(--transition-normal);
+  overflow-x: hidden;
+  position: relative;
+}
+
+/* Floating Liquid Glow Blobs */
+.bg-glow-orb-1 {
+  position: fixed;
+  top: -12%;
+  left: -8%;
+  width: 50vw;
+  height: 50vw;
+  max-width: 500px;
+  max-height: 500px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(59, 130, 246, 0.22) 0%, rgba(225, 29, 72, 0.1) 60%, transparent 80%);
+  filter: blur(80px);
+  -webkit-filter: blur(80px);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.bg-glow-orb-2 {
+  position: fixed;
+  bottom: 5%;
+  right: -10%;
+  width: 55vw;
+  height: 55vw;
+  max-width: 550px;
+  max-height: 550px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(245, 158, 11, 0.16) 0%, rgba(59, 130, 246, 0.08) 60%, transparent 80%);
+  filter: blur(90px);
+  -webkit-filter: blur(90px);
+  pointer-events: none;
+  z-index: 0;
+}
+
+[data-theme="light"] .bg-glow-orb-1 {
+  background: radial-gradient(circle, rgba(59, 130, 246, 0.12) 0%, rgba(225, 29, 72, 0.05) 60%, transparent 80%);
+}
+
+[data-theme="light"] .bg-glow-orb-2 {
+  background: radial-gradient(circle, rgba(245, 158, 11, 0.1) 0%, rgba(59, 130, 246, 0.04) 60%, transparent 80%);
+}
+
+/* Layout Scaffolding: Mobile-First Responsive Shell */
+.app-wrapper {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  position: relative;
+  width: 100%;
+  padding-bottom: 90px; /* Space for bottom navigation */
+  z-index: 1;
+}
+
+.app-wrapper.no-bottom-nav {
+  padding-bottom: 32px;
+}
+
+.app-container {
+  width: 100%;
+  max-width: 680px; /* Enhanced comfortable reading width */
+  margin: 0 auto;
+  padding: var(--space-md);
+  position: relative;
+  z-index: var(--z-surface);
+  flex: 1;
+}
+
+@media (min-width: 1024px) {
+  .app-container {
+    max-width: 980px;
+    padding: var(--space-xl) var(--space-lg);
+  }
+}
+
+/* Typography Hierarchy */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  color: var(--text-primary);
+  line-height: 1.25;
+}
+
+h1 {
+  font-size: 1.95rem;
+  margin-bottom: var(--space-xs);
+}
+
+h2 {
+  font-size: 1.5rem;
+  margin-bottom: var(--space-xs);
+}
+
+h3 {
+  font-size: 1.2rem;
+  margin-bottom: var(--space-xs);
+}
+
+p {
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+  line-height: 1.55;
+}
+
+.subheadline {
+  color: var(--text-secondary);
+  font-size: 0.925rem;
+  margin-bottom: var(--space-md);
+  line-height: 1.45;
+}
+
+/* Mono badge / stats font */
+.font-mono {
+  font-family: var(--font-mono);
+}
+
+/* RTL Support for Urdu */
+[dir="rtl"] {
+  direction: rtl;
+  text-align: right;
+}
+
+[dir="rtl"] .ltr-only {
+  direction: ltr;
+  text-align: left;
+}
+
+[dir="rtl"] .icon-flip {
+  transform: scaleX(-1);
+}
+
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-subtle);
+  border-radius: var(--radius-full);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}

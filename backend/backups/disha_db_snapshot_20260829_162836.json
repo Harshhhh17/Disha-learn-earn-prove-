@@ -1,0 +1,20 @@
+{
+  "timestamp": "2026-08-29 10:58:36 UTC",
+  "schema_version": "003",
+  "migrations_applied": [
+    "001_initial_schema.sql",
+    "002_payment_orders_schema.sql",
+    "003_performance_and_audit_hardening.sql"
+  ],
+  "tables": {
+    "users": 1,
+    "wallets": 1,
+    "questions": 5,
+    "quizzes": 3,
+    "payment_orders": 0,
+    "wallet_transactions": 0,
+    "withdrawals": 0,
+    "audit_logs": 0
+  },
+  "status": "BACKUP_VALID_AND_RECOVERABLE"
+}

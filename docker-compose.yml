@@ -1,0 +1,71 @@
+version: '3.8'
+
+services:
+  # 1. PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: disha_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_USER:-disha_user}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-disha_secure_password_2026}
+      POSTGRES_DB: ${DB_NAME:-disha_production}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./backend/src/migrations/001_initial_schema.sql:/docker-entrypoint-initdb.d/001_initial_schema.sql:ro
+    # Expose port only on localhost for host debugging; internal container network used by backend
+    ports:
+      - "127.0.0.1:5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-disha_user} -d ${DB_NAME:-disha_production}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # 2. Redis Cache (Optional, localhost-bound only)
+  redis:
+    image: redis:7-alpine
+    container_name: disha_redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-disha_redis_secret}
+    volumes:
+      - redisdata:/data
+    ports:
+      - "127.0.0.1:6379:6379"
+
+  # 3. Node.js Backend API
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: disha_backend
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      PORT: 4000
+      DATABASE_URL: postgres://${DB_USER:-disha_user}:${DB_PASSWORD:-disha_secure_password_2026}@postgres:5432/${DB_NAME:-disha_production}
+      JWT_SECRET: ${JWT_SECRET:-disha_super_secret_jwt_key_2026}
+      ADMIN_MASTER_PASSCODE: ${ADMIN_MASTER_PASSCODE:-disha@2026}
+      FRONTEND_URL: ${FRONTEND_URL:-https://disha-learn-earn-prove.netlify.app}
+    ports:
+      - "4000:4000"
+
+  # 4. Nginx Reverse Proxy
+  nginx:
+    image: nginx:alpine
+    container_name: disha_nginx
+    restart: unless-stopped
+    depends_on:
+      - backend
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    ports:
+      - "80:80"
+      - "443:443"
+
+volumes:
+  pgdata:
+  redisdata:

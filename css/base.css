@@ -208,3 +208,62 @@ p {
   100% { transform: scale(1.04); opacity: 1; filter: drop-shadow(0 0 16px rgba(59, 130, 246, 0.6)); }
 }
 
+/* ==============================================================================
+   Quiz Anti-Cheat & Screen Protection Styles
+   ============================================================================== */
+body.quiz-locked, .quiz-arena, .question-card {
+  -webkit-user-select: none !important;
+  -moz-user-select: none !important;
+  -ms-user-select: none !important;
+  user-select: none !important;
+  -webkit-touch-callout: none !important;
+}
+
+.quiz-security-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(220, 38, 38, 0.12);
+  color: #ef4444;
+  border: 1px solid rgba(220, 38, 38, 0.3);
+  padding: 4px 10px;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.anti-cheat-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.88);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100000;
+  padding: 16px;
+  animation: fadeIn 0.2s ease-out;
+}
+
+.anti-cheat-modal {
+  background: var(--bg-surface, #1e293b);
+  border: 2px solid #ef4444;
+  box-shadow: 0 20px 40px rgba(239, 68, 68, 0.25);
+  border-radius: 16px;
+  max-width: 480px;
+  width: 100%;
+  padding: 28px 24px;
+  text-align: center;
+  animation: springUp 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.anti-cheat-blurred {
+  filter: blur(20px) !important;
+  pointer-events: none !important;
+  user-select: none !important;
+}
+
+

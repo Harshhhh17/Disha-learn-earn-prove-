@@ -143,6 +143,11 @@ class ApiClient {
         method: 'POST',
         body: JSON.stringify({ questionId, selectedOptionIndex, clientResponseTimeMs })
       }),
+    recordExit: (attemptId, reason = 'BLUR_OR_TAB_SWITCH') =>
+      this.request(`/api/quizzes/attempts/${attemptId}/record-exit`, {
+        method: 'POST',
+        body: JSON.stringify({ reason })
+      }),
     finishTournament: (attemptId) => this.request(`/api/quizzes/attempts/${attemptId}/finish`, { method: 'POST' }),
     getPracticeQuestions: (category = 'All') => this.request(`/api/quizzes/practice?category=${encodeURIComponent(category)}`)
   };

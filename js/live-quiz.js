@@ -11,7 +11,7 @@ import { API } from './api.js';
 
 class LiveQuizEngine {
   constructor() {
-    this.state = 'WAITING'; // 'WAITING', 'COUNTDOWN', 'IN_QUIZ', 'REVEAL', 'FINISHED'
+    this.state = 'WAITING'; // 'WAITING', 'COUNTDOWN', 'IN_QUIZ', 'REVEAL', 'FINISHED', 'DISQUALIFIED'
     const scheduled = Storage.getScheduledQuizzes();
     this.quizData = (scheduled && scheduled[0]) ? scheduled[0] : {
       id: 'live_maha_01',
@@ -34,10 +34,17 @@ class LiveQuizEngine {
     this.totalResponseTimeMs = 0;
     this.answersLog = [];
     this.simulatedOpponents = [];
+
+    // Anti-Cheat State
+    this.leaveCount = 0;
+    this.maxAllowedLeaves = 2;
+    this.antiCheatActive = false;
+    this.isHandlingExit = false;
+    this.isDisqualified = false;
+    this.boundHandlers = {};
   }
 
   init() {
-    // Generate initial live tournament data
     const scheduled = Storage.getScheduledQuizzes();
     this.quizData = scheduled[0] || {
       id: 'live_maha_01',
@@ -59,6 +66,8 @@ class LiveQuizEngine {
       this.renderArena(container);
     } else if (this.state === 'FINISHED') {
       this.renderFinished(container);
+    } else if (this.state === 'DISQUALIFIED') {
+      this.renderDisqualifiedModal();
     }
   }
 
@@ -101,18 +110,18 @@ class LiveQuizEngine {
           </div>
         </div>
 
-        <!-- Rules Briefing -->
+        <!-- Rules Briefing with Anti-Cheat Details -->
         <div style="text-align: left; background: var(--bg-surface-inset); padding: var(--space-md); border-radius: var(--radius-md); margin-bottom: var(--space-xl); font-size: 0.85rem; color: var(--text-secondary);">
-          <div style="font-weight: 700; color: var(--text-primary); margin-bottom: 6px;">📋 Tournament Rules:</div>
+          <div style="font-weight: 700; color: var(--text-primary); margin-bottom: 6px;">📋 Tournament Rules & Anti-Cheat Lock:</div>
           <ul style="padding-left: 20px; line-height: 1.6;">
             <li>Each question has a <strong>hard 15-second timer</strong>.</li>
-            <li><strong>Speed Bonus:</strong> Faster correct answers yield higher points (Base 1000 + up to 500 bonus).</li>
-            <li><strong>Tie Breaker:</strong> Highest correct score → Lowest total response time → Fewest mistakes.</li>
-            <li>Real-money winnings credited instantly to your Disha wallet post-leaderboard.</li>
+            <li><strong>🔒 Quiz Lock Mode:</strong> Fullscreen is enforced. Tab switching, minimizing, screenshots, and text copying are disabled.</li>
+            <li><strong>⚠️ Exit Penalty:</strong> Exiting or switching apps erases all attempt progress and restarts the quiz from Question 1.</li>
+            <li><strong>⛔ Disqualification:</strong> Leaving the quiz <strong>more than 2 times</strong> results in immediate and permanent removal from the tournament.</li>
           </ul>
         </div>
 
-        <!-- App Exclusive Notice Banner (PRD v1.0 Feature 2) -->
+        <!-- App Exclusive Notice Banner -->
         <div class="neo-inset" style="padding: 10px 14px; border-radius: var(--radius-md); margin-bottom: var(--space-md); font-size: 0.82rem; font-weight: 700; color: var(--brand-primary); border-left: 3px solid var(--brand-primary); text-align: left;">
           📱 <strong>App Exclusive:</strong> Live Event Tournaments with real cash prizes are hosted exclusively on the Disha mobile application to ensure anti-cheat timer synchronization.
         </div>
@@ -129,7 +138,6 @@ class LiveQuizEngine {
     `;
 
     document.getElementById('btn-start-live-tournament')?.addEventListener('click', () => {
-      // PRD v1.0 Feature 2: Gating Web users from Live Events
       Sound.playFanfare();
       window.DishaApp?.openAppOnlyModal();
     });
@@ -171,11 +179,21 @@ class LiveQuizEngine {
   async beginQuizSession() {
     try {
       const res = await API.quiz.startTournament(this.quizData?.id || 'live_maha_01');
+      if (res.error === 'DISQUALIFIED') {
+        this.renderDisqualifiedModal();
+        return;
+      }
       this.attemptId = res.attemptId;
       this.questions = res.questions;
+      this.leaveCount = res.leaveCount || 0;
+      this.maxAllowedLeaves = res.maxAllowedExits || 2;
     } catch (err) {
       if (err.appDownloadRequired || err.code === 'APP_ONLY_FEATURE' || (err.message && err.message.includes('mobile app'))) {
         window.DishaApp?.openAppOnlyModal();
+        return;
+      }
+      if (err.code === 'DISQUALIFIED' || (err.message && err.message.includes('disqualified'))) {
+        this.renderDisqualifiedModal();
         return;
       }
       console.warn('[Offline / Fallback Mode] Starting local tournament session');
@@ -190,11 +208,256 @@ class LiveQuizEngine {
     this.totalResponseTimeMs = 0;
     this.answersLog = [];
 
+    // Activate Anti-Cheat Quiz Lock & Screen Protection
+    this.enableAntiCheatLock();
+
     // Pre-generate simulated realistic opponents
     this.generateOpponents();
 
     this.state = 'IN_QUIZ';
     this.loadQuestion();
+  }
+
+  /* ==============================================================================
+     QUIZ ANTI-CHEAT & SCREEN PROTECTION ENGINE
+     ============================================================================== */
+  enableAntiCheatLock() {
+    if (this.antiCheatActive) return;
+    this.antiCheatActive = true;
+    this.isHandlingExit = false;
+
+    // 1. Enter Fullscreen Mode
+    try {
+      if (!document.fullscreenElement && document.documentElement.requestFullscreen) {
+        document.documentElement.requestFullscreen().catch(() => {});
+      }
+    } catch (e) {}
+
+    // 2. Add Anti-Copy / Anti-Select Body Class
+    document.body.classList.add('quiz-locked');
+
+    // 3. Bind Event Handlers (Screenshot/Clipboard/DevTools protection)
+    this.boundHandlers.contextmenu = (e) => {
+      e.preventDefault();
+      return false;
+    };
+    this.boundHandlers.copyPaste = (e) => {
+      e.preventDefault();
+      return false;
+    };
+    this.boundHandlers.keydown = (e) => {
+      // Block developer tools and screenshot/print shortcuts
+      if (
+        e.key === 'F12' ||
+        (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'i' || e.key === 'J' || e.key === 'j' || e.key === 'C' || e.key === 'c')) ||
+        (e.ctrlKey && (e.key === 'u' || e.key === 'U' || e.key === 's' || e.key === 'S' || e.key === 'p' || e.key === 'P')) ||
+        e.key === 'PrintScreen'
+      ) {
+        e.preventDefault();
+        e.stopPropagation();
+        return false;
+      }
+    };
+
+    // 4. Tab Switching & Window Focus Loss Listeners
+    this.boundHandlers.visibilitychange = () => {
+      if (document.hidden && (this.state === 'IN_QUIZ' || this.state === 'REVEAL')) {
+        this.handleExitEvent('TAB_SWITCH_OR_MINIMIZED');
+      }
+    };
+    this.boundHandlers.blur = () => {
+      if (this.state === 'IN_QUIZ' || this.state === 'REVEAL') {
+        this.handleExitEvent('WINDOW_FOCUS_LOST');
+      }
+    };
+    this.boundHandlers.pagehide = () => {
+      if (this.state === 'IN_QUIZ' || this.state === 'REVEAL') {
+        this.handleExitEvent('PAGE_BACKGROUNDED');
+      }
+    };
+    this.boundHandlers.fullscreenchange = () => {
+      if (!document.fullscreenElement && (this.state === 'IN_QUIZ' || this.state === 'REVEAL')) {
+        this.handleExitEvent('FULLSCREEN_EXITED');
+      }
+    };
+
+    document.addEventListener('contextmenu', this.boundHandlers.contextmenu);
+    document.addEventListener('copy', this.boundHandlers.copyPaste);
+    document.addEventListener('cut', this.boundHandlers.copyPaste);
+    document.addEventListener('paste', this.boundHandlers.copyPaste);
+    document.addEventListener('selectstart', this.boundHandlers.copyPaste);
+    document.addEventListener('dragstart', this.boundHandlers.copyPaste);
+    window.addEventListener('keydown', this.boundHandlers.keydown, true);
+    document.addEventListener('visibilitychange', this.boundHandlers.visibilitychange);
+    window.addEventListener('blur', this.boundHandlers.blur);
+    window.addEventListener('pagehide', this.boundHandlers.pagehide);
+    document.addEventListener('fullscreenchange', this.boundHandlers.fullscreenchange);
+    document.addEventListener('webkitfullscreenchange', this.boundHandlers.fullscreenchange);
+  }
+
+  disableAntiCheatLock() {
+    this.antiCheatActive = false;
+    document.body.classList.remove('quiz-locked');
+
+    if (this.boundHandlers.contextmenu) document.removeEventListener('contextmenu', this.boundHandlers.contextmenu);
+    if (this.boundHandlers.copyPaste) {
+      document.removeEventListener('copy', this.boundHandlers.copyPaste);
+      document.removeEventListener('cut', this.boundHandlers.copyPaste);
+      document.removeEventListener('paste', this.boundHandlers.copyPaste);
+      document.removeEventListener('selectstart', this.boundHandlers.copyPaste);
+      document.removeEventListener('dragstart', this.boundHandlers.copyPaste);
+    }
+    if (this.boundHandlers.keydown) window.removeEventListener('keydown', this.boundHandlers.keydown, true);
+    if (this.boundHandlers.visibilitychange) document.removeEventListener('visibilitychange', this.boundHandlers.visibilitychange);
+    if (this.boundHandlers.blur) window.removeEventListener('blur', this.boundHandlers.blur);
+    if (this.boundHandlers.pagehide) window.removeEventListener('pagehide', this.boundHandlers.pagehide);
+    if (this.boundHandlers.fullscreenchange) {
+      document.removeEventListener('fullscreenchange', this.boundHandlers.fullscreenchange);
+      document.removeEventListener('webkitfullscreenchange', this.boundHandlers.fullscreenchange);
+    }
+
+    try {
+      if (document.fullscreenElement && document.exitFullscreen) {
+        document.exitFullscreen().catch(() => {});
+      }
+    } catch (e) {}
+  }
+
+  async handleExitEvent(reason = 'BLUR_OR_TAB_SWITCH') {
+    if (this.isHandlingExit || this.state === 'FINISHED' || this.state === 'WAITING' || this.state === 'DISQUALIFIED') return;
+    this.isHandlingExit = true;
+
+    // 1. Immediately pause timer and obfuscate DOM
+    if (this.timerInterval) clearInterval(this.timerInterval);
+    const arenaEl = document.querySelector('.quiz-arena');
+    if (arenaEl) arenaEl.classList.add('anti-cheat-blurred');
+
+    Sound.playWrong();
+
+    let serverData = null;
+    if (this.attemptId) {
+      try {
+        serverData = await API.quiz.recordExit(this.attemptId, reason);
+      } catch (err) {
+        console.warn('[Anti-Cheat] Could not report exit to server:', err);
+      }
+    }
+
+    const currentLeaves = serverData ? serverData.leaveCount : (this.leaveCount + 1);
+    this.leaveCount = currentLeaves;
+
+    if (serverData?.isDisqualified || this.leaveCount > 2) {
+      this.isDisqualified = true;
+      this.state = 'DISQUALIFIED';
+      this.disableAntiCheatLock();
+      this.renderDisqualifiedModal();
+      return;
+    }
+
+    // Erase local progress and restart attempt from Question 1
+    this.currentQIndex = 0;
+    this.userScore = 0;
+    this.streakCount = 0;
+    this.correctAnswersCount = 0;
+    this.totalResponseTimeMs = 0;
+    this.answersLog = [];
+
+    this.renderExitWarningModal(this.leaveCount);
+  }
+
+  renderExitWarningModal(leaveCount) {
+    const existing = document.getElementById('anti-cheat-warning-overlay');
+    if (existing) existing.remove();
+
+    const isFinal = leaveCount >= 2;
+    const overlay = document.createElement('div');
+    overlay.id = 'anti-cheat-warning-overlay';
+    overlay.className = 'anti-cheat-modal-overlay';
+    overlay.innerHTML = `
+      <div class="anti-cheat-modal">
+        <div style="font-size: 3rem; margin-bottom: 8px;">${isFinal ? '🚨' : '⚠️'}</div>
+        <div class="quiz-security-badge" style="margin-bottom: 12px;">
+          🔒 Anti-Cheat Violation Detected (${leaveCount}/2)
+        </div>
+        <h3 style="font-size: 1.35rem; color: #ef4444; margin-bottom: 8px;">
+          ${isFinal ? 'Final Warning: Quiz Exit Detected' : 'Warning: Quiz Exit Detected'}
+        </h3>
+        <p style="font-size: 0.9rem; color: var(--text-secondary); line-height: 1.5; margin-bottom: 16px;">
+          ${isFinal 
+            ? 'You have left the quiz screen <strong>2 times</strong>. This is your <strong>LAST chance</strong>. If you switch tabs, minimize, or exit fullscreen again, you will be <strong>permanently disqualified</strong> from this tournament.'
+            : 'Leaving the quiz screen, switching tabs, or opening floating windows is strictly prohibited. All your answers for this attempt have been <strong>erased</strong>, and your quiz has restarted from <strong>Question 1</strong>.'
+          }
+        </p>
+
+        <div style="background: var(--bg-surface-inset, rgba(0,0,0,0.2)); border: 1px dashed rgba(239,68,68,0.4); border-radius: 8px; padding: 10px; margin-bottom: 20px; font-size: 0.82rem; color: var(--text-muted);">
+          Exits Allowed Remaining: <strong>${Math.max(0, 2 - leaveCount)}</strong> • Progress Reset: <strong>Question 1 of ${this.totalQuestions}</strong>
+        </div>
+
+        <button id="btn-anti-cheat-resume" class="btn btn-primary btn-block" style="padding: 14px; font-size: 1rem; background: #ef4444; border-color: #dc2626;">
+          ${isFinal ? 'I Understand & Resume Question 1 (Final Chance)' : 'Restart from Question 1 (Enter Fullscreen)'}
+        </button>
+      </div>
+    `;
+
+    document.body.appendChild(overlay);
+
+    document.getElementById('btn-anti-cheat-resume')?.addEventListener('click', () => {
+      overlay.remove();
+      const arenaEl = document.querySelector('.quiz-arena');
+      if (arenaEl) arenaEl.classList.remove('anti-cheat-blurred');
+
+      this.isHandlingExit = false;
+
+      // Re-engage fullscreen
+      try {
+        if (!document.fullscreenElement && document.documentElement.requestFullscreen) {
+          document.documentElement.requestFullscreen().catch(() => {});
+        }
+      } catch (e) {}
+
+      this.loadQuestion();
+    });
+  }
+
+  renderDisqualifiedModal() {
+    const existing = document.getElementById('anti-cheat-warning-overlay');
+    if (existing) existing.remove();
+
+    this.disableAntiCheatLock();
+    if (this.timerInterval) clearInterval(this.timerInterval);
+
+    const container = document.getElementById('view-live-quiz');
+    if (!container) return;
+
+    container.innerHTML = `
+      <div class="neo-card" style="max-width: 540px; margin: 40px auto; text-align: center; border: 2px solid #ef4444; padding: 36px 24px;">
+        <div style="font-size: 3.5rem; margin-bottom: 12px;">⛔</div>
+        <div class="quiz-security-badge" style="margin-bottom: 14px;">
+          DISQUALIFIED FOR ANTI-CHEAT VIOLATION
+        </div>
+        <h2 style="font-size: 1.5rem; color: #ef4444; margin-bottom: 12px;">
+          Tournament Attempt Terminated
+        </h2>
+        <p style="color: var(--text-secondary); font-size: 0.92rem; line-height: 1.6; margin-bottom: 24px;">
+          You have exited the quiz screen <strong>more than 2 times</strong>. In accordance with Disha tournament integrity rules, your attempt has been permanently terminated. You must wait for the <strong>next scheduled quiz tournament</strong>.
+        </p>
+
+        <div style="background: var(--bg-surface-inset, rgba(0,0,0,0.2)); border-radius: 8px; padding: 14px; margin-bottom: 24px; text-align: left; font-size: 0.82rem; color: var(--text-muted);">
+          <div>🚫 <strong>Violation:</strong> Exceeded maximum allowed exits (3 exits detected)</div>
+          <div style="margin-top: 4px;">🛡️ <strong>Integrity Policy:</strong> Server-Authoritative Anti-Cheat Lock</div>
+          <div style="margin-top: 4px;">📅 <strong>Next Opportunity:</strong> Next scheduled daily tournament</div>
+        </div>
+
+        <button id="btn-disqualified-home" class="btn btn-neo btn-block" style="padding: 14px; font-size: 1rem;">
+          🏠 Return to Dashboard
+        </button>
+      </div>
+    `;
+
+    document.getElementById('btn-disqualified-home')?.addEventListener('click', () => {
+      this.state = 'WAITING';
+      window.DishaApp?.navigateTo('home');
+    });
   }
 
   generateOpponents() {
@@ -230,7 +493,7 @@ class LiveQuizEngine {
   startLiveTimer() {
     if (this.timerInterval) clearInterval(this.timerInterval);
 
-    const circumference = 2 * Math.PI * 28; // radius = 28
+    const circumference = 2 * Math.PI * 28;
     const circleProgress = document.getElementById('arena-circle-progress');
     const timerText = document.getElementById('arena-timer-text');
 
@@ -239,7 +502,6 @@ class LiveQuizEngine {
       this.timerMs = Math.max(0, 15000 - elapsed);
       const remainingSecs = Math.ceil(this.timerMs / 1000);
 
-      // SVG Dash Offset
       const progressFraction = this.timerMs / 15000;
       const offset = circumference * (1 - progressFraction);
 
@@ -261,7 +523,6 @@ class LiveQuizEngine {
         }
       }
 
-      // Audio tick on each full second threshold
       if (this.timerMs % 1000 < 60) {
         if (remainingSecs <= 4 && remainingSecs > 0) {
           Sound.playUrgentTick();
@@ -272,7 +533,7 @@ class LiveQuizEngine {
 
       if (this.timerMs <= 0) {
         clearInterval(this.timerInterval);
-        this.handleAnswerSubmission(null); // Time out, no option chosen
+        this.handleAnswerSubmission(null);
       }
     }, 50);
   }
@@ -288,7 +549,6 @@ class LiveQuizEngine {
     const q = this.questions[this.currentQIndex];
 
     try {
-      // Server-Authoritative Evaluation & Scoring
       let isCorrect = false;
       let pointsEarned = 0;
 
@@ -320,10 +580,9 @@ class LiveQuizEngine {
         this.answersLog.push({ correct: false, points: 0, time: responseTime });
       }
     } catch (e) {
-      console.warn('Fallback local evaluation:', e);
+      console.warn('Evaluation response:', e);
     }
 
-    // Simulate opponent answers for this question
     this.simulatedOpponents.forEach(opp => {
       const willBeCorrect = Math.random() < opp.baseSkill;
       const oppTime = 3000 + Math.random() * 9000;
@@ -337,7 +596,6 @@ class LiveQuizEngine {
 
     this.render();
 
-    // 2.5s rapid learning reveal before next question
     setTimeout(() => {
       if (this.currentQIndex < this.questions.length - 1) {
         this.currentQIndex++;
@@ -349,6 +607,7 @@ class LiveQuizEngine {
   }
 
   async finishTournament() {
+    this.disableAntiCheatLock();
     this.state = 'FINISHED';
 
     let userRank = 1;
@@ -408,7 +667,6 @@ class LiveQuizEngine {
       }
     }
 
-    // Update user stats
     if (user.stats) {
       user.stats.quizzesPlayed++;
       if (userRank <= 3) user.stats.quizzesWon++;
@@ -419,7 +677,6 @@ class LiveQuizEngine {
     this.leaderboardData = { allAspirants, userRank, prizeWon };
     this.render();
 
-    // Celebration
     Sound.playFanfare();
     Confetti.fire(150);
   }
@@ -437,12 +694,15 @@ class LiveQuizEngine {
 
     container.innerHTML = `
       <div class="quiz-arena">
-        <!-- Arena Topbar -->
+        <!-- Arena Topbar with Anti-Cheat Status -->
         <div class="arena-topbar">
           <div>
-            <span style="font-size: 0.8rem; font-weight: 700; color: var(--brand-primary); text-transform: uppercase;">
-              Question ${this.currentQIndex + 1} of ${this.totalQuestions}
-            </span>
+            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+              <span style="font-size: 0.8rem; font-weight: 700; color: var(--brand-primary); text-transform: uppercase;">
+                Question ${this.currentQIndex + 1} of ${this.totalQuestions}
+              </span>
+              <span class="quiz-security-badge">🔒 Quiz Lock Active</span>
+            </div>
             <div style="font-family: var(--font-mono); font-size: 1.1rem; font-weight: 800; color: var(--text-primary);">
               Score: <span style="color: var(--brand-primary);">${this.userScore.toLocaleString('en-IN')}</span> pts
             </div>
@@ -472,7 +732,7 @@ class LiveQuizEngine {
           </div>
         </div>
 
-        <!-- Question Card -->
+        <!-- Question Card (Anti-Copy & Selection Protected) -->
         <div class="question-card" style="margin-bottom: var(--space-md);">
           <div style="font-size: 0.78rem; font-weight: 700; color: var(--text-muted); margin-bottom: 8px;">
             ${q.category} • ${q.subject} • ${q.year || 'PYQ'}
@@ -534,6 +794,7 @@ class LiveQuizEngine {
   }
 
   renderFinished(container) {
+    this.disableAntiCheatLock();
     const { allAspirants, userRank, prizeWon } = this.leaderboardData;
     const top3 = allAspirants.slice(0, 3);
     const rest = allAspirants.slice(3, 10);
@@ -663,3 +924,4 @@ class LiveQuizEngine {
 }
 
 export const LiveQuiz = new LiveQuizEngine();
+

@@ -681,8 +681,66 @@ class UnifiedProductionHandler(http.server.SimpleHTTPRequestHandler):
 
             auth = self.get_auth_user()
             uid = auth["user_id"] if auth else body.get("userId", "usr_test_aspirant")
+
+            # ANTI-CHEAT CHECK 1: Check if user is already disqualified
+            for att in STATE["quiz_attempts"].values():
+                if att.get("user_id") == uid and att.get("status") == 'DISQUALIFIED':
+                    self.send_json(403, {
+                        "error": "DISQUALIFIED",
+                        "message": "You have been permanently removed from this quiz tournament for exceeding quiz exit limits. Please wait for the next scheduled quiz."
+                    })
+                    return
+
+            # ANTI-CHEAT CHECK 2: Check for existing in-progress attempt (reconnect/reload)
+            prev_att = next((att for att in STATE["quiz_attempts"].values() if att.get("user_id") == uid and att.get("status") == 'IN_PROGRESS'), None)
+            if prev_att:
+                prev_att["leave_count"] = prev_att.get("leave_count", 0) + 1
+                if prev_att["leave_count"] > 2:
+                    prev_att["status"] = 'DISQUALIFIED'
+                    prev_att["disqualified_reason"] = "EXCEEDED_MAX_QUIZ_EXITS (RELOAD_OR_RECONNECT)"
+                    self.send_json(403, {
+                        "error": "DISQUALIFIED",
+                        "message": "You have been permanently removed from this quiz for leaving the quiz screen more than 2 times. Please wait for the next available quiz tournament."
+                    })
+                    return
+
+                # Invalidate progress, erase answers, reset to Question 1
+                prev_att["score"] = 0
+                prev_att["correct_count"] = 0
+                prev_att["streak"] = 0
+                prev_att["answers"] = set()
+                prev_att["q_start_time"] = time.time()
+                
+                client_qs = [
+                    {
+                        "id": q["id"],
+                        "category": q["category_code"],
+                        "subject": q["subject"],
+                        "year": q["year"],
+                        "difficulty": q["difficulty"],
+                        "question_en": q["question_en"],
+                        "question_hi": q["question_hi"],
+                        "options_en": q["options_en"],
+                        "options_hi": q["options_hi"]
+                    }
+                    for q in prev_att["questions"]
+                ]
+
+                self.send_json(200, {
+                    "success": True,
+                    "attemptId": prev_att["id"],
+                    "timePerQuestionSec": 15,
+                    "questions": client_qs,
+                    "serverStartTime": time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()),
+                    "restarted": True,
+                    "leaveCount": prev_att["leave_count"],
+                    "maxAllowedExits": 2,
+                    "remainingExits": max(0, 2 - prev_att["leave_count"]),
+                    "warning": f"Anti-Cheat Warning: Quiz exit detected ({prev_att['leave_count']}/2). Progress erased and restarted from Question 1."
+                })
+                return
+
             attempt_id = f"att_{int(time.time())}_{random.randint(1000, 9999)}"
-            
             selected_qs = random.sample(STATE["questions"], min(5, len(STATE["questions"])))
             STATE["quiz_attempts"][attempt_id] = {
                 "id": attempt_id,
@@ -691,7 +749,10 @@ class UnifiedProductionHandler(http.server.SimpleHTTPRequestHandler):
                 "q_start_time": time.time(),
                 "score": 0,
                 "correct_count": 0,
+                "streak": 0,
                 "answers": set(),
+                "leave_count": 0,
+                "is_locked": True,
                 "questions": selected_qs,
                 "status": "IN_PROGRESS"
             }
@@ -717,7 +778,72 @@ class UnifiedProductionHandler(http.server.SimpleHTTPRequestHandler):
                 "attemptId": attempt_id,
                 "timePerQuestionSec": 15,
                 "questions": client_qs,
+                "leaveCount": 0,
+                "maxAllowedExits": 2,
                 "serverStartTime": time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime())
+            })
+            return
+
+        # 3.5 Record Quiz Exit / Blur Event (ANTI-CHEAT TRACKER)
+        if '/attempts/' in path and path.endswith('/record-exit'):
+            auth = self.get_auth_user()
+            if not auth:
+                self.send_json(401, {"error": "Unauthorized", "message": "Authentication required."})
+                return
+
+            attempt_id = path.split('/attempts/')[1].split('/')[0]
+            attempt = STATE["quiz_attempts"].get(attempt_id)
+            if not attempt:
+                self.send_json(404, {"error": "Not Found", "message": "Quiz attempt not found."})
+                return
+
+            if attempt["status"] == 'DISQUALIFIED':
+                self.send_json(200, {
+                    "success": False,
+                    "status": "DISQUALIFIED",
+                    "leaveCount": attempt.get("leave_count", 3),
+                    "maxAllowed": 2,
+                    "isDisqualified": True,
+                    "message": "You have been permanently removed from this quiz tournament."
+                })
+                return
+
+            if attempt["status"] != 'IN_PROGRESS':
+                self.send_json(200, {"success": True, "status": attempt["status"]})
+                return
+
+            attempt["leave_count"] = attempt.get("leave_count", 0) + 1
+            new_count = attempt["leave_count"]
+
+            if new_count > 2:
+                # 3rd exit -> Disqualify permanently
+                attempt["status"] = 'DISQUALIFIED'
+                attempt["disqualified_reason"] = "EXCEEDED_MAX_QUIZ_EXITS"
+                self.send_json(200, {
+                    "success": False,
+                    "status": "DISQUALIFIED",
+                    "leaveCount": new_count,
+                    "maxAllowed": 2,
+                    "isDisqualified": True,
+                    "message": "You have been permanently removed from this quiz for leaving the quiz screen more than 2 times. Please wait for the next available quiz tournament."
+                })
+                return
+
+            # 1st or 2nd exit -> Erase progress and reset to Question 1
+            attempt["score"] = 0
+            attempt["correct_count"] = 0
+            attempt["streak"] = 0
+            attempt["answers"] = set()
+            attempt["q_start_time"] = time.time()
+
+            self.send_json(200, {
+                "success": True,
+                "status": "IN_PROGRESS",
+                "leaveCount": new_count,
+                "maxAllowed": 2,
+                "remainingExits": 2 - new_count,
+                "restartRequired": True,
+                "message": f"Anti-Cheat Warning: Quiz exit detected ({new_count}/2)! Your answers have been erased and the quiz restarted from Question 1."
             })
             return
 
@@ -730,8 +856,16 @@ class UnifiedProductionHandler(http.server.SimpleHTTPRequestHandler):
 
             attempt_id = path.split('/attempts/')[1].split('/')[0]
             attempt = STATE["quiz_attempts"].get(attempt_id)
-            if not attempt or attempt["status"] != 'IN_PROGRESS':
-                self.send_json(404, {"error": "Not Found", "message": "Attempt not found or finalized."})
+            if not attempt:
+                self.send_json(404, {"error": "Not Found", "message": "Attempt not found."})
+                return
+
+            if attempt["status"] == 'DISQUALIFIED':
+                self.send_json(403, {"error": "DISQUALIFIED", "message": "You have been disqualified from this quiz."})
+                return
+
+            if attempt["status"] != 'IN_PROGRESS':
+                self.send_json(400, {"error": "Attempt Closed", "message": "Attempt is finalized."})
                 return
 
             # IDOR Check: Ensure attempt belongs to authenticated user
@@ -793,6 +927,10 @@ class UnifiedProductionHandler(http.server.SimpleHTTPRequestHandler):
             attempt = STATE["quiz_attempts"].get(attempt_id)
             if not attempt:
                 self.send_json(404, {"error": "Not Found"})
+                return
+
+            if attempt.get("status") == "DISQUALIFIED":
+                self.send_json(403, {"error": "DISQUALIFIED", "message": "You cannot finalize a disqualified tournament attempt."})
                 return
 
             # IDOR Check

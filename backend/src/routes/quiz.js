@@ -81,7 +81,101 @@ router.post('/tournaments/:id/start', AuthMiddleware.authenticate, async (req, r
       });
     }
 
-    // Load questions for this quiz
+    // ANTI-CHEAT CHECK 1: Check if user is already disqualified from this quiz
+    const prevDisqualified = await db.query(
+      "SELECT id FROM quiz_attempts WHERE quiz_id = $1 AND user_id = $2 AND status = 'DISQUALIFIED'",
+      [quizId, userId]
+    );
+    if (prevDisqualified.rows.length > 0 || (mem && Array.from(mem.quizAttempts.values()).some(a => a.quiz_id === quizId && a.user_id === userId && a.status === 'DISQUALIFIED'))) {
+      return res.status(403).json({
+        error: 'DISQUALIFIED',
+        message: 'You have been permanently removed from this quiz tournament for exceeding quiz exit limits. Please wait for the next scheduled quiz.'
+      });
+    }
+
+    // ANTI-CHEAT CHECK 2: Reconnection / Refresh / Session Interruption Handling
+    const activeAttemptRes = await db.query(
+      "SELECT * FROM quiz_attempts WHERE quiz_id = $1 AND user_id = $2 AND status = 'IN_PROGRESS'",
+      [quizId, userId]
+    );
+    let prevActive = activeAttemptRes.rows[0];
+    if (!prevActive && mem) {
+      prevActive = Array.from(mem.quizAttempts.values()).find(a => a.quiz_id === quizId && a.user_id === userId && a.status === 'IN_PROGRESS');
+    }
+
+    if (prevActive) {
+      const newLeaveCount = (parseInt(prevActive.leave_count || 0, 10)) + 1;
+      
+      if (newLeaveCount > 2) {
+        // Exceeded maximum allowed leaves (> 2) -> Disqualify permanently
+        await db.query(
+          "UPDATE quiz_attempts SET status = 'DISQUALIFIED', leave_count = $1, disqualified_reason = 'EXCEEDED_MAX_QUIZ_EXITS (REFRESH_OR_RECONNECT)' WHERE id = $2",
+          [newLeaveCount, prevActive.id]
+        );
+        if (mem && mem.quizAttempts.has(prevActive.id)) {
+          const mAtt = mem.quizAttempts.get(prevActive.id);
+          mAtt.status = 'DISQUALIFIED';
+          mAtt.leave_count = newLeaveCount;
+        }
+        return res.status(403).json({
+          error: 'DISQUALIFIED',
+          message: 'You have been permanently removed from this quiz for leaving the quiz screen more than 2 times. Please wait for the next available quiz tournament.'
+        });
+      }
+
+      // 1st or 2nd exit: Invalidate attempt progress, erase all answers, reset to Question 1
+      await db.query('DELETE FROM submitted_answers WHERE attempt_id = $1', [prevActive.id]);
+      await db.query(
+        "UPDATE quiz_attempts SET score = 0, correct_count = 0, leave_count = $1, start_time = NOW() WHERE id = $2",
+        [newLeaveCount, prevActive.id]
+      );
+      if (mem && mem.quizAttempts.has(prevActive.id)) {
+        const mAtt = mem.quizAttempts.get(prevActive.id);
+        mAtt.score = 0;
+        mAtt.correct_count = 0;
+        mAtt.streak = 0;
+        mAtt.answers = [];
+        mAtt.current_q_index = 0;
+        mAtt.leave_count = newLeaveCount;
+        mAtt.question_start_time = new Date();
+      }
+
+      // Load questions for this attempt
+      let qs = (mem && mem.quizAttempts.get(prevActive.id)?.questions) || [];
+      if (!qs || qs.length === 0) {
+        const qResult = await db.query(
+          'SELECT id, category_code, subject, year, difficulty, question_en, question_hi, options_en, options_hi FROM questions WHERE is_active = TRUE ORDER BY RANDOM() LIMIT 5'
+        );
+        qs = qResult.rows;
+      }
+
+      const clientQuestions = qs.map(q => ({
+        id: q.id,
+        category: q.category_code || q.category,
+        subject: q.subject,
+        year: q.year,
+        difficulty: q.difficulty,
+        question_en: q.question_en,
+        question_hi: q.question_hi,
+        options_en: q.options_en,
+        options_hi: q.options_hi
+      }));
+
+      return res.json({
+        success: true,
+        attemptId: prevActive.id,
+        timePerQuestionSec: 15,
+        questions: clientQuestions,
+        serverStartTime: new Date().toISOString(),
+        restarted: true,
+        leaveCount: newLeaveCount,
+        maxAllowedExits: 2,
+        remainingExits: Math.max(0, 2 - newLeaveCount),
+        warning: `Anti-Cheat Warning: Quiz exit detected (${newLeaveCount}/2). Progress erased and restarted from Question 1.`
+      });
+    }
+
+    // Load questions for new quiz attempt
     const qResult = await db.query(
       'SELECT id, category_code, subject, year, difficulty, question_en, question_hi, options_en, options_hi FROM questions WHERE is_active = TRUE ORDER BY RANDOM() LIMIT 5'
     );
@@ -94,10 +188,10 @@ router.post('/tournaments/:id/start', AuthMiddleware.authenticate, async (req, r
     const attemptId = 'att_' + crypto.randomBytes(8).toString('hex');
     const startTime = new Date();
 
-    // Create Attempt in Database
+    // Create Attempt in Database with anti-cheat lock active
     await db.query(
-      `INSERT INTO quiz_attempts (id, quiz_id, user_id, start_time, status) 
-       VALUES ($1, $2, $3, $4, 'IN_PROGRESS')`,
+      `INSERT INTO quiz_attempts (id, quiz_id, user_id, start_time, status, leave_count, is_locked) 
+       VALUES ($1, $2, $3, $4, 'IN_PROGRESS', 0, TRUE)`,
       [attemptId, quizId, userId, startTime]
     );
 
@@ -112,6 +206,8 @@ router.post('/tournaments/:id/start', AuthMiddleware.authenticate, async (req, r
         correct_count: 0,
         streak: 0,
         answers: [],
+        leave_count: 0,
+        is_locked: true,
         question_start_time: startTime,
         questions: questions,
         status: 'IN_PROGRESS'
@@ -137,11 +233,113 @@ router.post('/tournaments/:id/start', AuthMiddleware.authenticate, async (req, r
       attemptId,
       timePerQuestionSec: 15,
       questions: clientQuestions,
+      leaveCount: 0,
+      maxAllowedExits: 2,
       serverStartTime: startTime.toISOString()
     });
   } catch (err) {
     console.error('[Quiz Error /start]:', err);
     res.status(500).json({ error: 'Internal Server Error', message: 'Failed to initialize tournament attempt.' });
+  }
+});
+
+/**
+ * POST /api/quizzes/attempts/:attemptId/record-exit
+ * Server-authoritative anti-cheat exit tracker & progress eraser
+ */
+router.post('/attempts/:attemptId/record-exit', AuthMiddleware.authenticate, async (req, res) => {
+  try {
+    const { attemptId } = req.params;
+    const userId = req.user.id;
+    const { reason = 'BLUR_OR_TAB_SWITCH' } = req.body;
+
+    let attempt = null;
+    const dbAttempt = await db.query('SELECT * FROM quiz_attempts WHERE id = $1 AND user_id = $2', [attemptId, userId]);
+    if (dbAttempt.rows.length > 0) attempt = dbAttempt.rows[0];
+    else if (mem && mem.quizAttempts.has(attemptId)) attempt = mem.quizAttempts.get(attemptId);
+
+    if (!attempt) {
+      return res.status(404).json({ error: 'Attempt Not Found', message: 'Quiz attempt not found.' });
+    }
+
+    if (attempt.status === 'DISQUALIFIED') {
+      return res.json({
+        success: false,
+        status: 'DISQUALIFIED',
+        leaveCount: attempt.leave_count || 3,
+        maxAllowed: 2,
+        isDisqualified: true,
+        message: 'You have been permanently removed from this quiz tournament.'
+      });
+    }
+
+    if (attempt.status !== 'IN_PROGRESS') {
+      return res.json({ success: true, status: attempt.status });
+    }
+
+    const newLeaveCount = (parseInt(attempt.leave_count || 0, 10)) + 1;
+    attempt.leave_count = newLeaveCount;
+    attempt.last_leave_time = new Date();
+
+    if (newLeaveCount > 2) {
+      // 3rd violation -> Permanently Disqualify
+      attempt.status = 'DISQUALIFIED';
+      await db.query(
+        "UPDATE quiz_attempts SET status = 'DISQUALIFIED', leave_count = $1, disqualified_reason = $2 WHERE id = $3",
+        [newLeaveCount, `EXCEEDED_MAX_QUIZ_EXITS (${reason})`, attemptId]
+      );
+      if (mem && mem.quizAttempts.has(attemptId)) {
+        mem.quizAttempts.get(attemptId).status = 'DISQUALIFIED';
+        mem.quizAttempts.get(attemptId).leave_count = newLeaveCount;
+      }
+
+      return res.json({
+        success: false,
+        status: 'DISQUALIFIED',
+        leaveCount: newLeaveCount,
+        maxAllowed: 2,
+        isDisqualified: true,
+        message: 'You have been permanently removed from this quiz for leaving the quiz screen more than 2 times. Please wait for the next available quiz tournament.'
+      });
+    }
+
+    // 1st or 2nd violation -> Invalidate attempt progress, erase all answers, reset to Question 1
+    await db.query('DELETE FROM submitted_answers WHERE attempt_id = $1', [attemptId]);
+    await db.query(
+      "UPDATE quiz_attempts SET score = 0, correct_count = 0, leave_count = $1, start_time = NOW() WHERE id = $2",
+      [newLeaveCount, attemptId]
+    );
+
+    attempt.score = 0;
+    attempt.correct_count = 0;
+    attempt.streak = 0;
+    attempt.answers = [];
+    attempt.current_q_index = 0;
+    attempt.question_start_time = new Date();
+
+    if (mem && mem.quizAttempts.has(attemptId)) {
+      const m = mem.quizAttempts.get(attemptId);
+      m.score = 0;
+      m.correct_count = 0;
+      m.streak = 0;
+      m.answers = [];
+      m.current_q_index = 0;
+      m.leave_count = newLeaveCount;
+      m.question_start_time = new Date();
+    }
+
+    res.json({
+      success: true,
+      status: 'IN_PROGRESS',
+      leaveCount: newLeaveCount,
+      maxAllowed: 2,
+      remainingExits: 2 - newLeaveCount,
+      restartRequired: true,
+      message: `Anti-Cheat Warning: Quiz exit detected (${newLeaveCount}/2)! Your answers have been erased and the quiz restarted from Question 1.`
+    });
+  } catch (err) {
+    console.error('[Quiz Error /record-exit]:', err);
+    res.status(500).json({ error: 'Internal Server Error', message: 'Failed to record quiz exit.' });
   }
 });
 
@@ -158,8 +356,8 @@ router.post('/attempts/:attemptId/answer', AuthMiddleware.authenticate, async (r
     // Load Attempt
     let attempt = null;
     const dbAttempt = await db.query(
-      'SELECT * FROM quiz_attempts WHERE id = $1 AND user_id = $2 AND status = $3',
-      [attemptId, userId, 'IN_PROGRESS']
+      'SELECT * FROM quiz_attempts WHERE id = $1 AND user_id = $2',
+      [attemptId, userId]
     );
 
     if (dbAttempt.rows.length > 0) {
@@ -172,6 +370,20 @@ router.post('/attempts/:attemptId/answer', AuthMiddleware.authenticate, async (r
       return res.status(404).json({
         error: 'Attempt Not Found',
         message: 'Invalid or already finalized tournament attempt.'
+      });
+    }
+
+    if (attempt.status === 'DISQUALIFIED') {
+      return res.status(403).json({
+        error: 'DISQUALIFIED',
+        message: 'You have been disqualified from this quiz for violating anti-cheat rules.'
+      });
+    }
+
+    if (attempt.status !== 'IN_PROGRESS') {
+      return res.status(400).json({
+        error: 'Attempt Closed',
+        message: 'This tournament attempt is already finalized.'
       });
     }
 
@@ -274,6 +486,13 @@ router.post('/attempts/:attemptId/finish', AuthMiddleware.authenticate, async (r
 
     if (!attempt) {
       return res.status(404).json({ error: 'Attempt Not Found' });
+    }
+
+    if (attempt.status === 'DISQUALIFIED') {
+      return res.status(403).json({
+        error: 'DISQUALIFIED',
+        message: 'You cannot finalize a disqualified tournament attempt.'
+      });
     }
 
     // Idempotency check: If already completed, return existing result without re-crediting prize
